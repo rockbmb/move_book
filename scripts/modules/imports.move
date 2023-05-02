@@ -81,7 +81,7 @@ script {
 }
 
 /// To resolve naming conflicts (when 2 or more modules have same names) and to
-/// shorten you code you can change name of the imported module using keyword as.
+/// shorten you code, you can change name of the imported module using keyword as.
 script {
     use 0x1::Vector as V; // V now means Vector
 

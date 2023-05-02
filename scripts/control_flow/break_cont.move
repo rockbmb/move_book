@@ -23,7 +23,7 @@ script {
             i = i + 1;
 
             if (i == 5) {
-                break; // will result in compiler error. correct is `break` without semi
+                break; // will result in compiler error. correct is `break` without semicolon
                        // Error: Unreachable code
             };
 

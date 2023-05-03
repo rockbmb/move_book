@@ -109,3 +109,30 @@ script {
         0x1::Debug::print<u64>(&Shelf::size<u64>(&shelf));
     }
 }
+
+/*
+IMPORTANT
+
+* A vector can also represent strings.
+* The VM supports passing `vector<u8>` as argument to main functions,
+  in script.
+*/
+
+script {
+    use 0x1::Vector;
+
+    // accepting arguments in main
+    fun main(name: vector<u8>) {
+        let _ = name;
+
+        // using literals
+        // this is a "hello world" string
+        let str = x"68656c6c6f20776f726c64";
+        // with bytestring literal
+        let _ = b"hello world";
+        // They are treated as ASCII strings and are also interpreted as vector<u8>.
+
+        // hex literal gives you vector<u8> as well
+        Vector::length<u8>(&str);
+    }
+}

@@ -89,6 +89,8 @@ IMPORTANT
    Outside of the module, fields are private.
 2. Destructuring works much the same way as it does in Rust
 3. Max number of fields in one struct is 65535
+4. Destructuring is important w.r.t. resources (chapter 6)
+5. Because of 1., public getters and setters must be defined in the struct's
+   module in order to have read/write access to the struct's fields
 
 */
-

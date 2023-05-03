@@ -88,6 +88,8 @@ About generics in Move
    * for example, in a container struct with `copy + drop + store`, with
      an inner struct possessing only `drop`, it will be impossible to copy or store
      this container.
+   * Another perspective: a container doesn't need to constrain its inner types,
+     and can be flexible - permitting any type inside.
 */
 
 /// The below, when used, will cause an error
@@ -104,12 +106,54 @@ module Storage {
     public fun create_box(): Box<Error> {
         Box { contents: Error {} }
     }
+
+    // See point 4. above
+    // parent struct's constraints are added
+    // now the inner type MUST be copyable and droppable
+    struct Box2<T: copy + drop> has copy, drop {
+        contents: T
+    }
 }
 
-/// See point 3. above
 script {
+    /// This function would error, the reason is in point 3. above
     fun main() {
         {{sender}}::Storage::create_box() // value is created and dropped
                  // ^^^^^^^^^^^^^^^^^^^^^ Cannot ignore values without the 'drop' ability. The value must be used
+    }
+}
+
+/// Example with multiple generics
+module Storage {
+    struct Box<T> {
+        value: T
+    }
+
+    struct Shelf<T1, T2> {
+        box_1: Box<T1>,
+        box_2: Box<T2>
+    }
+
+    public fun create_shelf<Type1, Type2>(
+        box_1: Box<Type1>,
+        box_2: Box<Type2>
+    ): Shelf<Type1, Type2> {
+        Shelf {
+            box_1,
+            box_2
+        }
+    }
+}
+
+/// Using multiple generic type parameters is similar to using a single one:
+script {
+    use {{sender}}::Storage;
+
+    fun main() {
+        let b1 = Storage::create_box<u64>(100);
+        let b2 = Storage::create_box<u64>(200);
+
+        // you can use any types - so same ones are also valid
+        let _ = Storage::create_shelf<u64, u64>(b1, b2);
     }
 }

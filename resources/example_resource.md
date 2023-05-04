@@ -139,3 +139,43 @@ Signature of `borrow_global_mut`:
 ```rust
 native fun borrow_global_mut<T: key>(addr: address): &mut T;
 ```
+
+## Taking and destroying a resource
+
+```rust
+// modules/Collection.move
+module Collection {
+
+    // ... skipped ...
+
+    public fun destroy(account: &signer) acquires Collection {
+
+        // account no longer has the resource attached
+        let collection = move_from<Collection>(Signer::address_of(account));
+
+        // now we must use resource value - we'll destructure it
+        // `struct Item has drop`, so `vector<Item> has drop`, and
+        // `items` below is safely dropped
+        let Collection { items: _ } = collection;
+
+        // done. resource destroyed
+    }
+}
+```
+
+Reader's notes:
+1. Since resources cannot have `drop`, that ensures they *must* be handled properly
+  - either being destructured and having their inner parts dropped, or
+  - moved to another owner via `move_to`, seen above
+
+Either way, this ensures a resource is always used, either transacted between owners,
+or disposed of, if its inner components implement `drop`.
+
+This hints that resources relative to currencies and amounts must not have all their
+inner fields implement `drop`, so that they can never be dropped, and thus only transferred.
+
+Signature for `move_from`:
+
+```rust
+native fun move_from<T: key>(addr: address): T;
+```

@@ -60,3 +60,82 @@ signature looks similar to this.
 ```rust
 native fun exists<T: key>(addr: address): bool;
 ```
+
+## Reading and modifying a resource
+
+### Reading with `borrow_global`
+
+```rust
+// modules/Collection.move
+module Collection {
+
+    // new dependency here!
+    use 0x1::Signer;
+    use 0x1::Vector;
+
+    struct Item has store, drop {}
+    struct Collection has key, store {
+        items: vector<Item>
+    }
+
+    // ... skipped ...
+
+    /// get the collection's size
+    /// note the `acquires` keyword!
+    public fun size(account: &signer): u64 acquires Collection {
+        let owner = Signer::address_of(account);
+        let collection = borrow_global<Collection>(owner);
+
+        Vector::length(&collection.items)
+    }
+}
+```
+
+`borrow_global` provides an immutable reference to a resource `T`, and has signature
+
+```rust
+native fun borrow_global<T: key>(addr: address): &T;
+```
+
+* This function provides **read** access to a resource stored at a specific
+  address.
+  - This means that a module has the ability to read any of its resources at
+    any addresses (if this functionality is implemented).
+* Due to borrow checking, references to resources or its contents cannot be returned
+  - this is because the original reference to the resource will be dropped at the end of
+    its scope
+  - This, combined with resources not being permitted to have `copy`, means they
+    cannot be dereferenced with `*&`
+
+---
+#### `acquire` keyword
+
+* Must be put after a function's return value
+* It explicitly defines all the resources acquired by this function
+* Every used resource must be specified
+  - even if it's a nested function call which actually acquires a resource,
+    its parent scope must specified it in its in acquires list.
+* syntax:
+  ```rust
+  fun <name>(<args...>): <ret_type> acquires T, T1 ... { ... }
+  ```
+---
+
+### Writing with `borrow_global_mut`
+
+```rust
+module Collection {
+    // ... skipped ...
+
+    public fun add_item(account: &signer) acquires Collection {
+        let collection = borrow_global_mut<Collection>(Signer::address_of(account));
+
+        Vector::push_back(&mut collection.items, Item {});
+    }
+}
+```
+
+Signature of `borrow_global_mut`:
+```rust
+native fun borrow_global_mut<T: key>(addr: address): &mut T;
+```
